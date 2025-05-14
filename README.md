@@ -1,2 +1,2 @@
-# TS Military Law Chatbot
-A chatbot interface for answering military law questions.
+# TSMilitaryLaw Chatbot
+Ask anything about military law. This is the basic UI. Backend will be added next.

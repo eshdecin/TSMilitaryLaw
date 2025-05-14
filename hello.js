@@ -1,3 +1,3 @@
 export default function handler(req, res) {
-  res.status(200).json({ message: 'Hello from TS Military Law API!' });
+  res.status(200).json({ message: 'TSMilitaryLaw API is ready for orders!' });
 }
