@@ -18,9 +18,8 @@ def load_qa_chain():
 
     llm = OpenAI(temperature=0.0, api_key=os.getenv("OPENAI_API_KEY"))
 
-    qa_chain = RetrievalQA.from_chain_type(
+    return RetrievalQA.from_chain_type(
         llm=llm,
         retriever=retriever,
         return_source_documents=True
     )
-    return qa_chain
