@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.routes import chat_router
+from app.api.routes import chat_router  # Ensure this path matches your file structure
 
 app = FastAPI(
     title="TSMilitaryLaw Chatbot API",
