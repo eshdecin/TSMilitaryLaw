@@ -8,27 +8,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def load_qa_chain():
-    # Create embeddings
     embeddings = OpenAIEmbeddings(
         model="text-embedding-ada-002",
         api_key=os.getenv("OPENAI_API_KEY")
     )
 
-    # Load FAISS index
     db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     retriever = db.as_retriever(search_kwargs={"k": 5})
 
-    # Initialize LLM
-    llm = OpenAI(
-        temperature=0.0,
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
+    llm = OpenAI(temperature=0.0, api_key=os.getenv("OPENAI_API_KEY"))
 
-    # Build QA chain
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        return_source_documents=True
-    )
-    
+    qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain
