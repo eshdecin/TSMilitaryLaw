@@ -4,17 +4,16 @@ import docx2txt
 from pptx import Presentation
 import pandas as pd
 
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.docstore.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 
 load_dotenv()
-DATA_DIR = "pdfs"  # folder containing all legal docs
+DATA_DIR = "documents"  # folder containing all legal docs
 DB_PATH = "faiss_index"
 openai_key = os.getenv("OPENAI_API_KEY")
-
 
 def extract_text_from_file(filepath):
     ext = filepath.split(".")[-1].lower()
@@ -53,7 +52,6 @@ def extract_text_from_file(filepath):
 
     return text
 
-
 def load_documents():
     documents = []
     for filename in os.listdir(DATA_DIR):
@@ -63,17 +61,15 @@ def load_documents():
             documents.append(Document(page_content=text, metadata={"source": filename}))
     return documents
 
-
 def build_vector_store(documents):
     print("[+] Building FAISS vector store...")
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     split_docs = splitter.split_documents(documents)
 
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_key)
+    embeddings = OpenAIEmbeddings(api_key=openai_key)
     db = FAISS.from_documents(split_docs, embeddings)
     db.save_local(DB_PATH)
     print("[+] Vector store saved to", DB_PATH)
-
 
 if __name__ == "__main__":
     docs = load_documents()
