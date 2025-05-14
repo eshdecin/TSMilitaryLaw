@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.qa_chain import load_qa_chain
+from qa_chain import load_qa_chain
 
 # Initialize router and QA chain
 chat_router = APIRouter()
