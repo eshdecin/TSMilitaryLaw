@@ -1,7 +1,7 @@
 fastapi==0.95.2
 uvicorn==0.23.2
 langchain==0.1.14
-openai==1.11.1
+openai==1.10.0
 tiktoken==0.5.2
 pypdf==3.10.0
 python-dotenv==1.0.1
@@ -9,4 +9,4 @@ pandas==2.2.2
 openpyxl==3.1.2
 python-pptx==0.6.21
 PyMuPDF==1.23.7
-langchain-openai==0.0.5
+langchain-openai==0.0.4
