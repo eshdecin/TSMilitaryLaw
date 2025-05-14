@@ -1,27 +1,26 @@
 import os
-from dotenv import load_dotenv
-
-from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
+from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_PATH = "faiss_index"
-
 def load_qa_chain():
-    embeddings = OpenAIEmbeddings()  # no explicit API key
-    vectordb = FAISS.load_local(DB_PATH, embeddings, allow_dangerous_deserialization=True)
-
-    retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 5})
-
-    llm = ChatOpenAI(model="gpt-4", temperature=0.3)
-
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=True
+    # Create embeddings using new API (no proxies)
+    embeddings = OpenAIEmbeddings(
+        model="text-embedding-ada-002",
+        api_key=os.getenv("OPENAI_API_KEY")
     )
 
+    # Example: Load from FAISS index (adjust path or method as per your setup)
+    db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+
+    retriever = db.as_retriever(search_kwargs={"k": 5})
+
+    # Set up your LLM (or replace with ChatOpenAI if needed)
+    llm = OpenAI(temperature=0.0, api_key=os.getenv("OPENAI_API_KEY"))
+
+    qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain
