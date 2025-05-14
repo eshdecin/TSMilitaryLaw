@@ -3,7 +3,7 @@ services:
     name: tsmilitarylaw-backend
     env: python
     plan: free
-    region: oregon
+    region: singapore
     branch: main
     buildCommand: ""
     startCommand: uvicorn main:app --host=0.0.0.0 --port=10000
