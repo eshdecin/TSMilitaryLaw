@@ -1,43 +1,94 @@
 import os
-import glob
-import fitz  # PyMuPDF
-from langchain.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
-from dotenv import load_dotenv
+import fitz  # PyMuPDF for PDF
+from docx import Document as DocxDocument
+from pptx import Presentation
+import pandas as pd
 
-# Load the OpenAI API key
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
+from pathlib import Path
 
-# Directory where PDFs are stored
-PDF_DIR = "pdfs"
+def extract_text_from_pdf(file_path):
+    text = ""
+    doc = fitz.open(file_path)
+    for page in doc:
+        text += page.get_text()
+    return text
 
-# Output path for FAISS index
-DB_PATH = "faiss_index"
+def extract_text_from_docx(file_path):
+    text = ""
+    doc = DocxDocument(file_path)
+    for para in doc.paragraphs:
+        text += para.text + "\n"
+    return text
 
-def load_and_split_pdfs(directory):
+def extract_text_from_txt(file_path):
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        return f.read()
+
+def extract_text_from_pptx(file_path):
+    text = ""
+    prs = Presentation(file_path)
+    for slide in prs.slides:
+        for shape in slide.shapes:
+            if hasattr(shape, "text"):
+                text += shape.text + "\n"
+    return text
+
+def extract_text_from_xlsx(file_path):
+    text = ""
+    try:
+        xls = pd.ExcelFile(file_path)
+        for sheet in xls.sheet_names:
+            df = xls.parse(sheet)
+            text += df.to_string(index=False) + "\n"
+    except Exception as e:
+        print(f"[!] Failed to read {file_path}: {e}")
+    return text
+
+def load_documents_from_folder(folder_path="pdfs"):
     all_docs = []
-    for filepath in glob.glob(os.path.join(directory, "*.pdf")):
-        print(f"[+] Loading {filepath}")
-        text = ""
-        with fitz.open(filepath) as doc:
-            for page in doc:
-                text += page.get_text()
-        metadata = {"source": os.path.basename(filepath)}
-        all_docs.append(Document(page_content=text, metadata=metadata))
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    return splitter.split_documents(all_docs)
 
-def build_vector_store(documents, api_key):
-    print("[+] Generating embeddings and building FAISS vector store...")
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-    db = FAISS.from_documents(documents, embeddings)
-    db.save_local(DB_PATH)
-    print("[+] Vector store saved to:", DB_PATH)
+    for root, dirs, files in os.walk(folder_path):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            ext = filename.lower()
+
+            try:
+                if ext.endswith(".pdf"):
+                    print(f"[+] Loading PDF: {filename}")
+                    text = extract_text_from_pdf(file_path)
+
+                elif ext.endswith(".docx"):
+                    print(f"[+] Loading DOCX: {filename}")
+                    text = extract_text_from_docx(file_path)
+
+                elif ext.endswith(".txt"):
+                    print(f"[+] Loading TXT: {filename}")
+                    text = extract_text_from_txt(file_path)
+
+                elif ext.endswith(".pptx"):
+                    print(f"[+] Loading PPTX: {filename}")
+                    text = extract_text_from_pptx(file_path)
+
+                elif ext.endswith(".xlsx"):
+                    print(f"[+] Loading XLSX: {filename}")
+                    text = extract_text_from_xlsx(file_path)
+
+                else:
+                    print(f"[x] Skipping unsupported file: {filename}")
+                    continue
+
+                all_docs.append({
+                    "filename": filename,
+                    "content": text
+                })
+
+            except Exception as e:
+                print(f"[!] Error processing {filename}: {e}")
+
+    return all_docs
 
 if __name__ == "__main__":
-    documents = load_and_split_pdfs(PDF_DIR)
-    build_vector_store(documents, openai_api_key)
+    documents = load_documents_from_folder()
+    print(f"\nTotal files loaded: {len(documents)}")
+    for doc in documents:
+        print(f"- {doc['filename']} ({len(doc['content'])} chars)")
