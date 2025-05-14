@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
-router = APIRouter()
+chat_router = APIRouter()
 
-@router.post("/")
-async def get_answer(req: Request):
-    data = await req.json()
-    query = data.get("question", "")
-    return {"answer": f"You asked: '{query}'. This is a smart placeholder. Real legal brain incoming."}
+@chat_router.get("/")
+async def root():
+    return {"message": "Chatbot backend is ready, Sir!"}
