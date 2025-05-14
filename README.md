@@ -1,2 +1,3 @@
-# TSMilitaryLaw Chatbot
-Ask anything about military law. This is the basic UI. Backend will be added next.
+# TSMilitaryLaw Backend
+
+FastAPI backend for handling chatbot queries.
