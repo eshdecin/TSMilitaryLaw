@@ -10,8 +10,7 @@ load_dotenv()
 DB_PATH = "faiss_index"
 
 def load_qa_chain():
-    # No need to pass API key manually; it uses env variable
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings()  # no explicit API key
     vectordb = FAISS.load_local(DB_PATH, embeddings, allow_dangerous_deserialization=True)
 
     retriever = vectordb.as_retriever(search_type="similarity", search_kwargs={"k": 5})
