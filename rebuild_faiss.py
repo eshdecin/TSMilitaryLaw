@@ -3,24 +3,20 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import OpenAIEmbeddings
 
-# Directory where your reference PDFs are stored
-PDF_DIR = "pdfs"
+# Set path to your PDF directory
+pdf_dir = "pdfs"
+files = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
 
-def load_documents():
-    docs = []
-    for filename in os.listdir(PDF_DIR):
-        if filename.endswith(".pdf"):
-            loader = PyPDFLoader(os.path.join(PDF_DIR, filename))
-            docs.extend(loader.load())
-    return docs
+# Load all documents
+documents = []
+for file in files:
+    loader = PyPDFLoader(file)
+    documents.extend(loader.load())
 
-def build_faiss_index():
-    documents = load_documents()
-    print(f"Loaded {len(documents)} documents.")
-    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
-    db = FAISS.from_documents(documents, embeddings)
-    db.save_local("faiss_index")
-    print("FAISS index created and saved to 'faiss_index/'.")
+# Embed and index
+embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+faiss_index = FAISS.from_documents(documents, embeddings)
 
-if __name__ == "__main__":
-    build_faiss_index()
+# Save index to a folder named 'faiss_index'
+faiss_index.save_local("faiss_index")
+print("FAISS index rebuilt and saved to faiss_index/")
