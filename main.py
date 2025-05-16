@@ -1,34 +1,30 @@
 import os
+from fastapi import FastAPI
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import OpenAIEmbeddings
-from fastapi import FastAPI
-import uvicorn
 
-# Set path to your PDF directory
-pdf_dir = "pdfs"
-files = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
-
-# Load all documents
-documents = []
-for file in files:
-    loader = PyPDFLoader(file)
-    documents.extend(loader.load())
-
-# Embed and index
-embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
-faiss_index = FAISS.from_documents(documents, embeddings)
-
-# Save index to a folder named 'faiss_index'
-faiss_index.save_local("faiss_index")
-print("FAISS index rebuilt and saved to faiss_index/")
-
-# Dummy FastAPI app to keep Render from panicking
 app = FastAPI()
 
 @app.get("/")
-def read_root():
-    return {"message": "Rebuild done. This is a dummy port to keep Render happy."}
+def root():
+    return {"message": "Service running. Use /rebuild to trigger FAISS index generation."}
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+@app.get("/rebuild")
+def rebuild_index():
+    try:
+        pdf_dir = "pdfs"
+        files = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
+
+        documents = []
+        for file in files:
+            loader = PyPDFLoader(file)
+            documents.extend(loader.load())
+
+        embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+        faiss_index = FAISS.from_documents(documents, embeddings)
+        faiss_index.save_local("faiss_index")
+
+        return {"status": "success", "message": "FAISS index rebuilt successfully."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
