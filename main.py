@@ -52,3 +52,7 @@ def rebuild_index():
     except Exception as e:
         print("Exception occurred:", str(e))
         return {"status": "error", "message": str(e)}
+       
+        if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
