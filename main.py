@@ -1,4 +1,5 @@
 import os
+import time
 from fastapi import FastAPI
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
@@ -13,29 +14,41 @@ def root():
 @app.get("/rebuild")
 def rebuild_index():
     try:
-        print("Step 1: Reading PDFs from 'pdfs/'...")
+        start_time = time.time()
         pdf_dir = "pdfs"
         files = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
-        print(f"Step 2: Found {len(files)} PDF(s)")
+
+        if not files:
+            return {"status": "error", "message": "No PDF files found in /pdfs directory."}
+
+        print(f"Step 1: Found {len(files)} PDF(s)")
 
         documents = []
-        for file in files:
-            print(f"Step 3: Loading file: {file}")
+        for idx, file in enumerate(files):
+            print(f"Step 2.{idx+1}: Loading file: {file}")
             loader = PyPDFLoader(file)
-            documents.extend(loader.load())
+            pages = loader.load()
+            if not pages:
+                print(f"Warning: No pages loaded from {file}")
+            else:
+                print(f"Loaded {len(pages)} page(s) from {file}")
+                documents.extend(pages)
 
-        print("Step 4: Initializing OpenAI Embeddings...")
+        if not documents:
+            return {"status": "error", "message": "No text extracted from any PDFs."}
+
+        print("Step 3: Initializing embeddings...")
         embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
-        print("Step 5: Creating FAISS index...")
+        print("Step 4: Generating FAISS index...")
         faiss_index = FAISS.from_documents(documents, embeddings)
-
-        print("Step 6: Saving FAISS index to disk...")
         faiss_index.save_local("faiss_index")
 
-        print("Step 7: Completed!")
-        return {"status": "success", "message": "FAISS index rebuilt successfully."}
+        total_time = round(time.time() - start_time, 2)
+        print(f"Step 5: FAISS index saved. Total time: {total_time} seconds")
+
+        return {"status": "success", "message": f"FAISS index built in {total_time} seconds with {len(documents)} chunks."}
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        print("Exception occurred:", str(e))
         return {"status": "error", "message": str(e)}
