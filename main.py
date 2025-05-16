@@ -23,20 +23,19 @@ def rebuild_index():
             print(f"Step 3: Loading file: {file}")
             loader = PyPDFLoader(file)
             documents.extend(loader.load())
-        print(f"Step 4: Loaded {len(documents)} documents")
 
-        print("Step 5: Initializing embeddings")
+        print("Step 4: Initializing OpenAI Embeddings...")
         embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
-        print("Step 6: Building FAISS index")
+        print("Step 5: Creating FAISS index...")
         faiss_index = FAISS.from_documents(documents, embeddings)
 
-        print("Step 7: Saving FAISS index locally")
+        print("Step 6: Saving FAISS index to disk...")
         faiss_index.save_local("faiss_index")
 
-        print("Step 8: Done")
+        print("Step 7: Completed!")
         return {"status": "success", "message": "FAISS index rebuilt successfully."}
 
     except Exception as e:
-        print("Error occurred during rebuild:", str(e))
+        print(f"ERROR: {str(e)}")
         return {"status": "error", "message": str(e)}
