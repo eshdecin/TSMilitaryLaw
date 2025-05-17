@@ -20,13 +20,14 @@ async def chat_endpoint(request: ChatRequest):
     query = request.query
 
     if not os.path.exists(FAISS_INDEX_PATH):
-        raise HTTPException(status_code=404, detail="FAISS index not found. Please rebuild it first.")
+        raise HTTPException(status_code=404, detail="FAISS index not found. Please rebuild.")
 
     embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
     vectorstore = FAISS.load_local(FAISS_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
 
     docs = vectorstore.similarity_search(query)
-    chain = get_chain(ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY")), vectorstore)
+
+    chain = get_chain(ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"), temperature=0), vectorstore)
     response = chain.run(input_documents=docs, question=query)
 
-    return {"response": response}
+    return {"message": response}
