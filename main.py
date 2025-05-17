@@ -1,18 +1,14 @@
-from fastapi import FastAPI
-from app.api import router as api_router
-from pydantic import BaseModel
 import os
-from langchain.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.document_loaders import PyPDFLoader
+from fastapi import FastAPI
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.document_loaders import PyPDFLoader
+from pydantic import BaseModel
 
 PDF_DIR = "pdfs"
 FAISS_INDEX_PATH = "faiss_index"
 
 app = FastAPI()
-
-# Mount internal API routes
-app.include_router(api_router)
 
 class QueryRequest(BaseModel):
     query: str
@@ -37,6 +33,8 @@ def rebuild_index():
         embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
         faiss_index = FAISS.from_documents(documents, embeddings)
         faiss_index.save_local(FAISS_INDEX_PATH)
-        return {"message": f"FAISS index rebuilt from {len(files)} PDF(s)"}
+        return {"message": "FAISS index built and saved successfully."}
+
     except Exception as e:
+        print("Error during index rebuilding:", str(e))
         return {"error": str(e)}
