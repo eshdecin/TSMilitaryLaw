@@ -1,17 +1,24 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
-from pydantic import BaseModel
+from app.api import router as api_router
 
 PDF_DIR = "pdfs"
 FAISS_INDEX_PATH = "faiss_index"
 
 app = FastAPI()
 
-class QueryRequest(BaseModel):
-    query: str
+# CORS FIX (needed to allow frontend to talk to backend)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can replace "*" with ["https://tsmilitarylaw.info"] for added security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
@@ -33,8 +40,11 @@ def rebuild_index():
         embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
         faiss_index = FAISS.from_documents(documents, embeddings)
         faiss_index.save_local(FAISS_INDEX_PATH)
-        return {"message": "FAISS index built and saved successfully."}
 
+        return {"message": "FAISS index rebuilt successfully."}
     except Exception as e:
-        print("Error during index rebuilding:", str(e))
+        print(f"Error during FAISS index rebuild: {e}")
         return {"error": str(e)}
+
+# Mounting /chat route from app/api/chat.py
+app.include_router(api_router)
