@@ -17,7 +17,7 @@ export default function Home() {
       const res = await fetch("https://tsmilitarylaw-backend.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: input })
+        body: JSON.stringify({ question: input }) // FIXED: changed "query" to "question"
       });
 
       const data = await res.json();
