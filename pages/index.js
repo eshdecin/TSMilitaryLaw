@@ -17,14 +17,19 @@ export default function Home() {
       const res = await fetch("https://tsmilitarylaw-backend.onrender.com/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input }) // FIXED: changed "query" to "question"
+        body: JSON.stringify({ query: input })
       });
+
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
 
       const data = await res.json();
       const assistantReply = data.message || "No response received.";
 
       setMessages([...newMessages, { role: "assistant", content: assistantReply }]);
     } catch (error) {
+      console.error("Chat error:", error);
       setMessages([...newMessages, { role: "assistant", content: "Error contacting backend." }]);
     }
   };
