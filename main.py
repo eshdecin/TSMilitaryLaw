@@ -1,24 +1,16 @@
-import os
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from app.api import router as api_router
+import os
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
-from app.api import router as api_router
 
 PDF_DIR = "pdfs"
 FAISS_INDEX_PATH = "faiss_index"
 
 app = FastAPI()
 
-# CORS FIX (needed to allow frontend to talk to backend)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # You can replace "*" with ["https://tsmilitarylaw.info"] for added security
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(api_router, prefix="")
 
 @app.get("/")
 def root():
@@ -43,8 +35,4 @@ def rebuild_index():
 
         return {"message": "FAISS index rebuilt successfully."}
     except Exception as e:
-        print(f"Error during FAISS index rebuild: {e}")
         return {"error": str(e)}
-
-# Mounting /chat route from app/api/chat.py
-app.include_router(api_router)
