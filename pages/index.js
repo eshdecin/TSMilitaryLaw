@@ -16,15 +16,9 @@ export default function Home() {
     try {
       const res = await fetch("https://tsmilitarylaw-backend.onrender.com/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: input })
       });
-
-      if (!res.ok) {
-        throw new Error("Request failed");
-      }
 
       const data = await res.json();
       const assistantReply = data.message || "No response received.";
@@ -66,4 +60,4 @@ export default function Home() {
       </div>
     </div>
   );
-        }
+}
