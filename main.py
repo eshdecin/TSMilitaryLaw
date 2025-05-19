@@ -1,8 +1,11 @@
 from fastapi import FastAPI
-from app.api.chat import router as chat_router  # Import router directly
+from app.api import chat, rebuild  # Import both routers
 
 app = FastAPI()
-app.include_router(chat_router)
+
+# Mount API routers
+app.include_router(chat.router)
+app.include_router(rebuild.router)
 
 @app.get("/")
 def root():
