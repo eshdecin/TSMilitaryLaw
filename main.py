@@ -4,20 +4,10 @@ from app.api import chat
 
 app = FastAPI()
 
-from fastapi.middleware.cors import CORSMiddleware
-
+# CORS Setup (Add only once)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tsmilitarylaw.info"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# CORS Setup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://tsmilitarylaw.info"],
+    allow_origins=["https://tsmilitarylaw.info"],  # Frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
