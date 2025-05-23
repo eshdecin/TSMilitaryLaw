@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_openai import ChatOpenAI
+from qa_chain import get_chain
 import os
 
 router = APIRouter()
 
-# Define Pydantic model for request body
+PDF_DIR = "pdfs"
+FAISS_INDEX_PATH = "faiss_index"
+
 class ChatRequest(BaseModel):
     query: str
 
@@ -16,15 +19,18 @@ class ChatRequest(BaseModel):
 async def chat_endpoint(request: ChatRequest):
     query = request.query
 
-    # Load FAISS index
-    index = FAISS.load_local("faiss_index", OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY")))
+    if not os.path.exists(FAISS_INDEX_PATH):
+        raise HTTPException(status_code=404, detail="FAISS index not found. Please rebuild.")
 
-    # Search relevant documents
-    docs = index.similarity_search(query)
-    content = "\n".join(doc.page_content for doc in docs[:3]) if docs else "No relevant content found."
+    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+    vectorstore = FAISS.load_local(
+        FAISS_INDEX_PATH,
+        embeddings,
+        allow_dangerous_deserialization=True  # <-- this is the fix
+    )
 
-    # Send to OpenAI LLM
-    llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    response = llm.invoke(f"Based on the following content, answer this: {query}\n\n{content}")
-    
-    return {"message": response.content}
+    docs = vectorstore.similarity_search(query)
+    chain = get_chain(ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY")))
+    response = chain.run(input_documents=docs, question=query)
+
+    return {"message": response}
