@@ -1,9 +1,14 @@
 from fastapi import FastAPI
-from app.api import chat
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.chat import router as chat_router
 
 app = FastAPI()
-app.include_router(chat.router)
 
-@app.get("/")
-def root():
-    return {"message": "Service running. POST to /chat with { query: 'your question' }"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(chat_router)
