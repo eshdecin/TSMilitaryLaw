@@ -1,7 +1,9 @@
-# Python bytecode
+# Bytecode and Python cache
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
 
 # Environment files
 .env
@@ -12,30 +14,34 @@ __pycache__/
 *.db
 *.sqlite3
 
-# MacOS and system files
+# macOS and Windows system files
 .DS_Store
 Thumbs.db
 
-# Python virtual environment
+# Virtual environments
 venv/
 .venv/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
-# FAISS or vectorstore cache (if any)
+# FAISS or vectorstore cache
 faiss_index/
+*.faiss
+*.pkl
+*.pickle
 
 # VSCode settings
 .vscode/
 
-# Python cache
-*.pyo
-*.pyd
-
-# Test artifacts
-coverage/
-htmlcov/
+# Pytest and test artifacts
 .tox/
 .nox/
 .pytest_cache/
+coverage/
+htmlcov/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
