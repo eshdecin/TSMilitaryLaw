@@ -4,16 +4,19 @@ from app.api import chat
 
 app = FastAPI()
 
-# CORS Setup (Add only once)
+# Infantry-Grade CORS Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tsmilitarylaw.info"],  # Frontend domain
+    allow_origins=[
+        "https://tsmilitarylaw.info",   # Your live frontend
+        "http://localhost:3000"         # Optional: Local testing
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include chat router
+# Include chat route
 app.include_router(chat.router)
 
 @app.get("/")
