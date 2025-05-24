@@ -1,36 +1,31 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from langchain_community.embeddings import OpenAIEmbeddings
+from fastapi import APIRouter, Request
 from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_openai import ChatOpenAI
-from qa_chain import get_chain
+from langchain_openai import OpenAIEmbeddings
+from dotenv import load_dotenv
 import os
+
+# Load environment variables from .env
+load_dotenv()
 
 router = APIRouter()
 
-PDF_DIR = "pdfs"
-FAISS_INDEX_PATH = "faiss_index"
-
-class ChatRequest(BaseModel):
-    query: str
-
 @router.post("/chat")
-async def chat_endpoint(request: ChatRequest):
-    query = request.query
+async def chat_endpoint(request: Request):
+    body = await request.json()
+    query = body.get("query")
 
-    if not os.path.exists(FAISS_INDEX_PATH):
-        raise HTTPException(status_code=404, detail="FAISS index not found. Please rebuild.")
+    if not query:
+        return {"message": "Query field is required."}
 
-    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
-    vectorstore = FAISS.load_local(
-        FAISS_INDEX_PATH,
-        embeddings,
-        allow_dangerous_deserialization=True  # <-- this is the fix
+    # Fix: Allow trusted deserialization
+    index = FAISS.load_local(
+        "faiss_index",
+        OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY")),
+        allow_dangerous_deserialization=True
     )
 
-    docs = vectorstore.similarity_search(query)
-    chain = get_chain(ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY")))
-    response = chain.run(input_documents=docs, question=query)
-
-    return {"message": response}
+    retriever = index.as_retriever(search_kwargs={"k": 5})
+    docs = retriever.get_relevant_documents(query)
+    
+    content = "\n---\n".join([doc.page_content for doc in docs])
+    return {"message": content or "No relevant content found."}
