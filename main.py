@@ -1,24 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import chat
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env (for local dev)
-load_dotenv()
+from app.api import chat  # your router
 
 app = FastAPI()
 
-# CORS settings
+# ✅ Only ONE proper CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tsmilitarylaw.info"],  # Frontend URL
+    allow_origins=["https://tsmilitarylaw.info"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include the chat router
+# ✅ Mount the chat router
 app.include_router(chat.router)
 
 @app.get("/")
