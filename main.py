@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import chat  # your router
+from app.api import chat
 
 app = FastAPI()
 
-# ✅ Only ONE proper CORS setup
+# ✅ FINAL CORS FIX
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tsmilitarylaw.info"],
+    allow_origins=[
+        "https://tsmilitarylaw.info",
+        "https://tsmilitarylaw-backend.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
